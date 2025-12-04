@@ -1,0 +1,15 @@
+import javax.swing.SwingUtilities;
+
+/**
+ * Main application entry point.
+ * Responsible for creating and displaying the POSjframe.
+ */
+public class POSApplication {
+    public static void main(String[] args) {
+        // SwingUtilities.invokeLater ensures the GUI is created safely on the EDT.
+        SwingUtilities.invokeLater(() -> {
+            POSjframe frame = new POSjframe();
+            frame.setVisible(true);
+        });
+    }
+}
