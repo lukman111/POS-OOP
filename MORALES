@@ -1,0 +1,252 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.util.HashMap;
+import java.util.Map;
+
+
+
+public class POSjframe extends JFrame {
+
+    
+    private final BillCalculator calculator = new BillCalculator();
+    private final Map<JButton, MenuItem> menuMap = new HashMap<>();
+
+    
+    private JTable jTable1;
+    private JTextField jtxtSubTotal, jtxtTax, jtxtTotal, jtxtDisplay, jtxtChange;
+    private JComboBox<String> jComboBox1;
+    private JButton burger, chicken, coke, spaghetti, fries, beefsteak;
+    private JButton jbtn0, jbtn1, jbtn2, jbtn3, jbtn4, jbtn5, jbtn6, jbtn7, jbtn8, jbtn9, jbtnPoint, jbtnClear;
+    private JButton jbtnPay, jbtnRemove, jbtnReset, jbtnExit;
+
+    public POSjframe() {
+        initComponents();
+        populateMenu();
+    }
+
+    private void populateMenu() {
+        
+        MenuItem[] menuItems = {
+            new MenuItem("Burger", 150.0, "burgerrr.gif"),
+            new MenuItem("Chicken", 200.0, "chicken.gif"),
+            new MenuItem("Coke", 50.0, "coke.gif"),
+            new MenuItem("Spaghetti", 180.0, "spaghetti.gif"),
+            new MenuItem("Fries", 80.0, "fries.gif"),
+            new MenuItem("Beefsteak", 250.0, "steak.gif")
+        };
+
+        
+        menuMap.put(burger, menuItems[0]);
+        menuMap.put(chicken, menuItems[1]);
+        menuMap.put(coke, menuItems[2]);
+        menuMap.put(spaghetti, menuItems[3]);
+        menuMap.put(fries, menuItems[4]);
+        menuMap.put(beefsteak, menuItems[5]);
+
+        
+        for (JButton button : menuMap.keySet()) {
+            button.addActionListener(this::menuItemAction);
+        }
+    }
+
+    private void initComponents() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("OOP POS by Samiddin, Enriquez, Morales");
+        setLayout(new BorderLayout(10, 10));
+
+        
+        JScrollPane tableScroll = new JScrollPane(jTable1 = new JTable(new DefaultTableModel(new Object[]{"Product", "Qty", "Price"}, 0)));
+        tableScroll.setPreferredSize(new Dimension(300, 500));
+        add(tableScroll, BorderLayout.WEST);
+
+        JPanel centerPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+        burger = createSquareMenuButton("Burger", "burgerrr.gif");
+        chicken = createSquareMenuButton("Chicken", "chicken.gif");
+        spaghetti = createSquareMenuButton("Spaghetti", "spaghetti.gif");
+        fries = createSquareMenuButton("Fries", "fries.gif");
+        beefsteak = createSquareMenuButton("Beefsteak", "steak.gif");
+        coke = createSquareMenuButton("Coke", "coke.gif");
+        centerPanel.add(burger); centerPanel.add(chicken); centerPanel.add(coke);
+        centerPanel.add(spaghetti); centerPanel.add(fries); centerPanel.add(beefsteak);
+        add(centerPanel, BorderLayout.CENTER);
+
+        JPanel rightPanel = createKeypadPanel();
+        add(rightPanel, BorderLayout.EAST);
+
+        JPanel topPanel = createTopActionPanel();
+        add(topPanel, BorderLayout.NORTH);
+
+        JPanel bottomPanel = createBillingAndPaymentPanel();
+        add(bottomPanel, BorderLayout.SOUTH);
+
+       
+        pack();
+        setLocationRelativeTo(null);
+        setResizable(true);
+
+        
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                for(Map.Entry<JButton, MenuItem> entry : menuMap.entrySet()) {
+                    resizeMenuButtonImage(entry.getKey(), entry.getValue().getImagePath());
+                }
+            }
+        });
+    }
+
+    
+    private JPanel createKeypadPanel() {
+        
+        JPanel rightPanel = new JPanel(new GridLayout(4, 3, 5, 5));
+        jbtn7 = new JButton("7"); jbtn8 = new JButton("8"); jbtn9 = new JButton("9");
+        jbtn4 = new JButton("4"); jbtn5 = new JButton("5"); jbtn6 = new JButton("6");
+        jbtn1 = new JButton("1"); jbtn2 = new JButton("2"); jbtn3 = new JButton("3");
+        jbtn0 = new JButton("0"); jbtnPoint = new JButton(".");
+        jbtnClear = new JButton("C");
+
+        rightPanel.add(jbtn7); rightPanel.add(jbtn8); rightPanel.add(jbtn9);
+        rightPanel.add(jbtn4); rightPanel.add(jbtn5); rightPanel.add(jbtn6);
+        rightPanel.add(jbtn1); rightPanel.add(jbtn2); rightPanel.add(jbtn3);
+        rightPanel.add(jbtn0); rightPanel.add(jbtnPoint); rightPanel.add(jbtnClear);
+        
+        JButton[] numButtons = {jbtn0, jbtn1, jbtn2, jbtn3, jbtn4, jbtn5, jbtn6, jbtn7, jbtn8, jbtn9, jbtnPoint};
+        for (JButton b : numButtons) {
+            b.addActionListener(e -> jtxtDisplay.setText(jtxtDisplay.getText() + b.getText()));
+        }
+        jbtnClear.addActionListener(e -> jtxtDisplay.setText(""));
+        return rightPanel;
+    }
+
+    private JPanel createTopActionPanel() {
+       
+        JPanel topPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        jbtnRemove = new JButton("Remove"); jbtnReset = new JButton("Reset"); 
+        jbtnPay = new JButton("Pay"); jbtnExit = new JButton("Exit");
+        topPanel.add(jbtnRemove); topPanel.add(jbtnReset); topPanel.add(jbtnPay); topPanel.add(jbtnExit);
+
+        jbtnPay.addActionListener(this::payAction);
+        jbtnReset.addActionListener(e -> resetAll());
+        jbtnRemove.addActionListener(this::removeItem);
+        jbtnExit.addActionListener(e -> System.exit(0));
+        return topPanel;
+    }
+
+    private JPanel createBillingAndPaymentPanel() {
+       
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 20, 10));
+        
+        
+        JPanel billingPanel = new JPanel(new GridLayout(3, 2, 5, 5));
+        billingPanel.setBorder(BorderFactory.createTitledBorder("Bill"));
+        billingPanel.add(new JLabel("SubTotal:")); jtxtSubTotal = new JTextField(); jtxtSubTotal.setEditable(false); billingPanel.add(jtxtSubTotal);
+        billingPanel.add(new JLabel("VAT:")); jtxtTax = new JTextField(); jtxtTax.setEditable(false); billingPanel.add(jtxtTax);
+        billingPanel.add(new JLabel("Total:")); jtxtTotal = new JTextField(); jtxtTotal.setEditable(false); billingPanel.add(jtxtTotal);
+        bottomPanel.add(billingPanel);
+
+       
+        JPanel paymentPanel = new JPanel(new GridLayout(3, 2, 5, 5));
+        paymentPanel.setBorder(BorderFactory.createTitledBorder("Payment"));
+        paymentPanel.add(new JLabel("Payment Method:")); jComboBox1 = new JComboBox<>(new String[]{"Cash", "Credit Card", "E-Wallet"}); paymentPanel.add(jComboBox1);
+        paymentPanel.add(new JLabel("Cash:")); jtxtDisplay = new JTextField(); paymentPanel.add(jtxtDisplay);
+        paymentPanel.add(new JLabel("Change:")); jtxtChange = new JTextField(); jtxtChange.setEditable(false); paymentPanel.add(jtxtChange);
+        bottomPanel.add(paymentPanel);
+        
+        return bottomPanel;
+    }
+
+    private JButton createSquareMenuButton(String text, String imagePath) {
+        JButton button = new JButton(text) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                int size = Math.max(d.width, d.height);
+                return new Dimension(Math.max(size, 100), Math.max(size, 100));
+            }
+        };
+        button.setHorizontalTextPosition(SwingConstants.CENTER);
+        button.setVerticalTextPosition(SwingConstants.BOTTOM);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setContentAreaFilled(false);
+        resizeMenuButtonImage(button, imagePath);
+        return button;
+    }
+
+    private void resizeMenuButtonImage(JButton button, String imagePath) {
+        int size = Math.min(button.getWidth(), button.getHeight());
+        int iconSize = (int) (size * 0.9);
+        if (iconSize > 0) {
+            ImageIcon icon = new ImageIcon(imagePath);
+            Image img = icon.getImage();
+            Image scaled = img.getScaledInstance(iconSize, iconSize, Image.SCALE_SMOOTH);
+            button.setIcon(new ImageIcon(scaled));
+        }
+    }
+
+    
+
+    private void menuItemAction(ActionEvent e) {
+        JButton source = (JButton) e.getSource();
+        MenuItem item = menuMap.get(source);
+        if (item != null) {
+            addItem(item.getName(), item.getPrice());
+        }
+    }
+
+    private void addItem(String name, double price) {
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.addRow(new Object[]{name, 1, price});
+        calculator.addToSubtotal(price); 
+        updateBill();
+    }
+
+    private void updateBill() {
+        jtxtSubTotal.setText(calculator.calculateSubtotalString());
+        jtxtTax.setText(calculator.calculateTaxString());
+        jtxtTotal.setText(calculator.calculateTotalString());
+    }
+
+    private void payAction(ActionEvent evt) {
+        try {
+            double cash = Double.parseDouble(jtxtDisplay.getText());
+            double total = calculator.calculateTotal(); 
+
+            if (cash >= total) {
+                String change = calculator.calculateChangeString(cash);
+                jtxtChange.setText(change);
+                JOptionPane.showMessageDialog(this, "Transaction Complete. Change: " + change, "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Not enough cash! Required: " + calculator.calculateTotalString(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid cash input!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void removeItem(ActionEvent evt) {
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow >= 0) {
+            double price = (Double) jTable1.getValueAt(selectedRow, 2);
+            calculator.deductFromSubtotal(price); 
+            ((DefaultTableModel) jTable1.getModel()).removeRow(selectedRow);
+            updateBill();
+            jtxtChange.setText("");
+        } else {
+            JOptionPane.showMessageDialog(this, "Select a row to remove!", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void resetAll() {
+        calculator.reset(); 
+        jtxtSubTotal.setText("");
+        jtxtTax.setText("");
+        jtxtTotal.setText("");
+        jtxtDisplay.setText("");
+        jtxtChange.setText("");
+        ((DefaultTableModel) jTable1.getModel()).setRowCount(0);
+    }
+}
