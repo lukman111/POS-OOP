@@ -1,12 +1,12 @@
 public class MenuItem {
     private final String name;
     private final double price;
-    private final String imagePath;
+    private final String imagepath;
 
-    public MenuItem(String name, double price, String imagePath) {
+    public MenuItem(String name, double price, String imagepath) {
         this.name = name;
         this.price = price;
-        this.imagePath = imagePath;
+        this.imagePath = imagepath;
     }
 
     public String getName() {
